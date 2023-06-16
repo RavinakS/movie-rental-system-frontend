@@ -1,0 +1,15 @@
+/* .card-header{
+    background-color: rgb(159, 204, 101);
+} */
+
+.button {
+    background: #dcafe0;
+    border: 1px solid #f2d118;
+    color: #fff;
+    font-size: 1.25rem;
+    padding: 0.5rem;
+    margin: 0.5rem 0;
+    border-radius: 8px;
+    outline: none;
+    cursor: pointer;
+}

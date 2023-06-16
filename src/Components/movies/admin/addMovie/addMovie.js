@@ -1,0 +1,196 @@
+import React, { useState } from "react";
+import './addMovie.css';
+import '../../../../App.css';
+import './style.css'
+import axios from "axios";
+import { useNavigate } from "react-router";
+import Swal2 from "sweetalert2";
+
+export default function Addmovie(){
+    let navigate = useNavigate();
+    const today = new Date().toISOString().split('T')[0];
+
+    const data = new FormData();
+
+    const [movie, setMovie] = useState({
+        name: "",
+        genre: "",
+        releasDate: "",
+        avalCD: "",
+        coins: "",
+        image: ""
+    })
+
+    const [{alt, src}, setImg] = useState({
+        src: 'MovieImg',
+        alt: 'Upload an Image'
+    });
+    
+
+    const handleChange = event =>{
+        const {name, value} = event.target;
+        
+        setMovie({
+            ...movie,
+            [name]: value,
+        })
+        
+        try{
+            
+            if(event.target.files[0]) {
+                setMovie({
+                    ...movie,
+                    ["image"]: event.target.files[0],
+                })
+                                
+                setImg({
+                    src: URL.createObjectURL(event.target.files[0]),
+                    alt: event.target.files[0].name
+                });
+            }   
+        }catch{
+            setMovie({
+                ...movie,
+                [name]: value,
+            })
+        }
+
+    }
+
+    const addingMovie = async () =>{
+        const {name, genre, releasDate, avalCD, coins, image} = movie;
+        if (image != "") {
+            data.append('image', image);
+
+            if(name && genre && releasDate && avalCD && coins){
+                if(avalCD<0 || coins <0){
+                    Swal2.fire({
+                        icon : "error",
+                        title : "rents or price must be a positive number."
+                    })
+                }else if(releasDate > today){
+                    Swal2.fire({
+                        icon: "error",
+                        title: "Invalid Date"
+                    })
+                }else{
+                    try{
+                        var reg_name_lastname = /^[a-zA-Z\s]*$/;
+    
+                        if(!reg_name_lastname.test(movie.genre)){ 
+                            Swal2.fire({
+                                icon: "error",
+                                title: "Correct Genre: only letters and spaces."
+                            })
+                        }else{
+                            data.append('name', name);
+                            data.append('genre', genre);
+                            data.append('releasDate', releasDate);
+                            data.append('avalCD', avalCD);
+                            data.append('coins', coins);
+
+                            let res = await axios.post("/add-movie", data);
+                            if (res.error) {
+                                console.log(res.error);
+                            }
+                            await Swal2.fire({
+                                icon : "success",
+                                title : res.data.message
+                            })
+                            navigate('/admin-movie-page');
+                        }
+                    }catch(error){
+                        Swal2.fire({
+                            icon : "error",
+                            title : error.response.data.message
+                        })
+                    }
+                }
+            }else{
+                Swal2.fire({
+                    icon : "error",
+                    title : "Invalid Inputs"
+                })
+            }
+        }else{
+            Swal2.fire({
+                icon : "error",
+                title : "Please Upload an image for the movie."
+            })
+        }
+    }
+
+    return (
+        <>
+            <div class="pagetitle">
+            <h1>Movies</h1>
+            <nav>
+                <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="/admin-movie-page">Movies</a></li>
+                <li class="breadcrumb-item">Add Movie</li>
+                </ol>
+            </nav>
+            </div>
+            <div align="center">
+            <div className="App">
+            <div className="addMovie">
+                <h1>Movie Details</h1>
+                
+                <div className="form__img-input-container">
+                    <input 
+                        type="file" 
+                        accept=".png, .jpg, .jpeg" 
+                        id="photo" 
+                        onChange={handleChange}
+
+                    />
+                    <img src={src} alt={alt} className="form-img__img-preview"/>
+                </div>
+                <input 
+                    type="text" 
+                    name = "name" 
+                    value = {movie.name} 
+                    placeholder="Movie Name" 
+                    onChange = { handleChange }>
+                    </input>
+                <input 
+                    type="text" 
+                    name = "genre" 
+                    id="genre"
+                    value = {movie.genre} 
+                    placeholder="Genre" 
+                    onChange = { handleChange }
+                    ></input>
+                <input 
+                    type="date" 
+                    name = "releasDate" 
+                    max = {today}
+                    value = {movie.releasDate} 
+                    placeholder="Release Date" 
+                    onChange = { handleChange }
+                    ></input>
+                <input 
+                    type="number" 
+                    name = "avalCD" 
+                    value = {movie.avalCD} 
+                    placeholder="rents" 
+                    onChange = { handleChange }
+                    ></input>
+                <input 
+                    type="number" 
+                    name = "coins" 
+                    value = {movie.coins} 
+                    placeholder="price" 
+                    onChange = { handleChange }
+                    ></input>
+                <button 
+                className="button" 
+                onClick = {addingMovie}
+                >Add</button>
+            </div>
+            </div>
+        </div>
+        </>
+    )
+};
